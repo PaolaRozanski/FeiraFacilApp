@@ -1,6 +1,64 @@
 <script setup>
-  // O aluno deverá implementar a lógica do componente.
-  // import { pedidos } from '@/data/pedidos'
+import { computed, ref } from 'vue'
+import { pedidos } from '@/data/pedidos'
+
+const filtro = ref('')
+
+const pedidosFiltrados = computed(() => {
+  const termo = filtro.value.trim().toLowerCase()
+
+  if (!termo) {
+    return pedidos.value
+  }
+
+  return pedidos.value.filter((pedido) => {
+    const codigo = pedido.codigo.toLowerCase()
+    const cliente = pedido.cliente.toLowerCase()
+
+    return codigo.includes(termo) || cliente.includes(termo)
+  })
+})
+
+const totalPedidos = computed(() => pedidos.value.length)
+
+const totalItensVendidos = computed(() => {
+  return pedidos.value.reduce((total, pedido) => {
+    return total + pedido.itens.reduce((subtotal, item) => {
+      return subtotal + item.quantidade
+    }, 0)
+  }, 0)
+})
+
+const totalVendido = computed(() => {
+  return pedidos.value.reduce((total, pedido) => {
+    return total + pedido.itens.reduce((subtotal, item) => {
+      return subtotal + item.precoUnitario * item.quantidade
+    }, 0)
+  }, 0)
+})
+
+const produtosDiferentes = (pedido) => {
+  return pedido.itens.length
+}
+
+const totalItensPedido = (pedido) => {
+  return pedido.itens.reduce((total, item) => {
+    return total + item.quantidade
+  }, 0)
+}
+
+const totalPedido = (pedido) => {
+  return pedido.itens.reduce((total, item) => {
+    return total + item.precoUnitario * item.quantidade
+  }, 0)
+}
+
+const formatarMoeda = (valor) => {
+  return new Intl.NumberFormat('pt-BR', {
+    style: 'currency',
+    currency: 'BRL',
+  }).format(valor)
+}
 </script>
 
 <template>
@@ -18,23 +76,17 @@
     >
       <article class="summary-card">
         <span>Pedidos realizados</span>
-
-        <!-- O aluno deverá calcular este valor. -->
-        <strong>0</strong>
+        <strong>{{ totalPedidos }}</strong>
       </article>
 
       <article class="summary-card">
         <span>Itens vendidos</span>
-
-        <!-- O aluno deverá calcular este valor. -->
-        <strong>0</strong>
+        <strong>{{ totalItensVendidos }}</strong>
       </article>
 
       <article class="summary-card">
         <span>Total vendido</span>
-
-        <!-- O aluno deverá calcular este valor. -->
-        <strong>R$ 0,00</strong>
+        <strong>{{ formatarMoeda(totalVendido) }}</strong>
       </article>
     </section>
 
@@ -49,6 +101,7 @@
 
           <input
             id="filtro"
+            v-model="filtro"
             name="filtro"
             type="search"
             placeholder="Digite o cliente ou código"
@@ -64,13 +117,11 @@
     <section class="card" aria-labelledby="pedidos-realizados">
       <h2 id="pedidos-realizados">Pedidos realizados</h2>
 
-      <!--
-        O aluno deverá utilizar uma diretiva condicional para
-        apresentar uma mensagem na tela quando nenhum pedido for encontrado.
-      -->
+      <p v-if="pedidosFiltrados.length === 0" class="empty-state">
+        Nenhum pedido encontrado.
+      </p>
 
-      <!-- Exiba aqui uma mensagem quando nenhum pedido for encontrado -->
-      <div class="table-responsive">
+      <div v-else class="table-responsive">
         <table>
           <thead>
             <tr>
@@ -83,17 +134,16 @@
           </thead>
 
           <tbody>
-           <!--
-              Exemplo da estrutura que deverá ser repetida pelo aluno:
-
-              <tr>
-                <td>Código do pedido</td>
-                <td>Nome do cliente</td>
-                <td>Quantidade de produtos diferentes</td>
-                <td>Quantidade total de itens</td>
-                <td>Valor total do pedido</td>
-              </tr>
-            -->
+            <tr
+              v-for="pedido in pedidosFiltrados"
+              :key="pedido.codigo"
+            >
+              <td>{{ pedido.codigo }}</td>
+              <td>{{ pedido.cliente }}</td>
+              <td>{{ produtosDiferentes(pedido) }}</td>
+              <td>{{ totalItensPedido(pedido) }}</td>
+              <td>{{ formatarMoeda(totalPedido(pedido)) }}</td>
+            </tr>
           </tbody>
         </table>
       </div>

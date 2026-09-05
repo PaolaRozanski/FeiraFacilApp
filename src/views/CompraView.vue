@@ -1,5 +1,6 @@
 <script setup>
   import { ref } from 'vue'
+  import { pedidos } from '@/data/pedidos'
 
   const codigoPedido = ref('')
   const nomeCliente = ref('')
@@ -49,17 +50,22 @@
     produtos.value = []
   }
 
-  const finalizarPedido = () => {
-    if (validarPedido() && produtos.value.length > 0) {
-      console.log('Pedido finalizado', {
-        codigoPedido: codigoPedido.value,
-        nomeCliente: nomeCliente.value,
-        produtos: produtos.value,
-        total: calcularTotal()
-      })
-      limpar()
-    }
+const finalizarPedido = () => {
+  if (validarPedido() && produtos.value.length > 0) {
+      pedidos.value.push({
+      codigo: codigoPedido.value.trim(),
+      cliente: nomeCliente.value.trim(),
+      itens: produtos.value.map((produto) => ({
+        id: produto.id,
+        produto: produto.nome,
+        precoUnitario: produto.preco,
+        quantidade: produto.quantidade
+      }))
+    })
+
+    limpar()
   }
+}
 </script>
 
 <template>
